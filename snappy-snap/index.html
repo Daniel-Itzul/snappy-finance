@@ -1,0 +1,395 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Snappy Finance!</title>
+    <link rel="icon" type="image/svg" href="./images/icon.svg"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+  </head>
+  <body>
+    <main>
+        <div class="container mt-5">
+            <div class="form-group">
+              <div class="row">  
+                <div class="col-lg-6">
+                  <h1>Snappy Finance</h1>
+                </div>
+                <div class="col-lg-6">
+                  <button class="btn btn-success btn-lg" id="connect" onclick="connect();">Connect</button>
+                </div>
+              </div>
+              <hr>
+              <div class="row">  
+                <div class="form-group">
+                  <h2>Your Account</h2>
+                  <div class="input-group mb-3">
+                      <span class="input-group-text">Your Collateral Value</span>
+                      <input disabled="True" id="collateralAmount" type="text" class="form-control" placeholder="">
+                      <span class="input-group-text">Your Debt Value</span>
+                      <input disabled="True" id="debtAmount" type="text" class="form-control" placeholder="">
+                      <span class="input-group-text">Health Factor</span>
+                      <input disabled="True" id="healthFactor" type="text" class="form-control" placeholder="">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <h3>Deposit</h3>
+                        <div class="input-group mb-3">
+                            <input id="tokenAddressD" type="text" class="form-control" placeholder="Address of Token to Deposit">
+                        </div>
+                        <div class="input-group mb-3">
+                            <input id="depositAmount" type="text" class="form-control" placeholder="Amount to Deposit">
+                        </div>
+                        <div>  
+                            <button disabled="True" class="btn btn-success opButton" id="deposit" onclick="deposit();">Deposit</button>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="form-group">
+                        <h3>Borrow</h3>
+                        <div class="input-group mb-3">
+                            <input id="tokenAddressB" type="text" class="form-control" placeholder="Address of Token to Borrow">
+                        </div>
+                        <div class="input-group mb-3">
+                            <input id="borrowAmount" type="text" class="form-control" placeholder="Amount to Borrow">
+                        </div>
+                        <div>  
+                            <button disabled="True" class="btn btn-success opButton" id="borrow" onclick="borrow();">Borrow</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="form-group">
+                        <h3>Withdraw</h3>
+                        <div class="input-group mb-3">
+                            <input id="tokenAddressW" type="text" class="form-control" placeholder="Address of Token to Withdraw">
+                        </div>
+                        <div class="input-group mb-3">
+                            <input id="withdrawAmount" type="text" class="form-control" placeholder="Amount to Withdraw">
+                        </div>
+                        <div>  
+                            <button disabled="True" class="btn btn-success opButton" id="withdraw" onclick="withdraw();">Withdraw</button>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="form-group">
+                        <h3>Repay</h3>
+                        <div class="input-group mb-3">
+                            <input id="tokenAddressR" type="text" class="form-control" placeholder="Address of Token to Repay">
+                        </div>
+                        <div class="input-group mb-3">
+                            <input id="repayAmount" type="text" class="form-control" placeholder="Amount to Repay">
+                        </div>
+                        <div>  
+                            <button disabled="True" class="btn btn-success opButton" id="deposit" onclick="repay();">Repay</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3"></div>
+                <hr>
+                <div class="row">
+                    <h2>Notifications</h1>
+                        <div id="notifications" class="container mt-2">         
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- Scripts 
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/moralis/dist/moralis.js"></script>
+    <script> 
+      //Approved ERC20 Tokens contracts source in repo. Need to deploy and whitelist your own
+      //TK1: 0x96228219706FE598C9B52EfdCAc24EA6F68b02f1
+      //TK2: 0x701e73b00f95667b1Dd6C463663aF8fE632E3F6e   
+
+      //constants needed
+      const contractAddress = "0xC04392a7189783c08316Dfc01ce8d8b46C227384"; //Lending platform contract available in repo, deploy your own
+      const contractABI = [{"inputs":[],"name":"NeedsMoreThanZero","type":"error"},{"inputs":[{"internalType":"address","name":"token","type":"address"}],"name":"TokenNotAllowed","type":"error"},{"inputs":[],"name":"TransferFailed","type":"error"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"token","type":"address"},{"indexed":true,"internalType":"address","name":"priceFeed","type":"address"}],"name":"AllowedTokenSet","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"account","type":"address"},{"indexed":true,"internalType":"address","name":"token","type":"address"},{"indexed":true,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Borrow","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"account","type":"address"},{"indexed":true,"internalType":"address","name":"token","type":"address"},{"indexed":true,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Deposit","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"account","type":"address"},{"indexed":true,"internalType":"address","name":"repayToken","type":"address"},{"indexed":true,"internalType":"address","name":"rewardToken","type":"address"},{"indexed":false,"internalType":"uint256","name":"halfDebtInEth","type":"uint256"},{"indexed":false,"internalType":"address","name":"liquidator","type":"address"}],"name":"Liquidate","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"account","type":"address"},{"indexed":true,"internalType":"address","name":"token","type":"address"},{"indexed":true,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Repay","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"account","type":"address"},{"indexed":true,"internalType":"address","name":"token","type":"address"},{"indexed":true,"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Withdraw","type":"event"},{"inputs":[],"name":"LIQUIDATION_REWARD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"LIQUIDATION_THRESHOLD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MIN_HEALH_FACTOR","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"borrow","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"deposit","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getAccountBorrowedValue","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getAccountCollateralValue","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"user","type":"address"}],"name":"getAccountInformation","outputs":[{"internalType":"uint256","name":"borrowedValueInETH","type":"uint256"},{"internalType":"uint256","name":"collateralValueInETH","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"getTokenValueFromUSD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"getUSDValue","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"healthFactor","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"},{"internalType":"address","name":"repayToken","type":"address"},{"internalType":"address","name":"rewardToken","type":"address"}],"name":"liquidate","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"renounceOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"repay","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"}],"name":"s_accountToTokenBorrows","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"}],"name":"s_accountToTokenDeposits","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"s_allowedTokens","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"s_tokenToPriceFeed","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"address","name":"priceFeed","type":"address"}],"name":"setAllowedToken","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"}];
+      const tokenABI = [{"inputs":[{"internalType":"string","name":"name_","type":"string"},{"internalType":"string","name":"symbol_","type":"string"}],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
+      const snapId = `local:${window.location.href}`;
+      const ethers = Moralis.web3Library;
+
+      //Ethereum provider detection and UI readiness
+      const initialize = () => {
+        getAccount() != null && initializeActive();
+      }
+
+      const initializeActive = async() => {
+        buttons = document.getElementsByClassName("opButton")
+        for (let i = 0; i < buttons.length; i++) {
+          buttons[i].disabled = false;
+        }
+        document.getElementById("connect").disabled = true;
+        await Moralis.enableWeb3();
+        populateUserData();
+      }
+
+      const getAccount = () => {
+        try {
+          return ethereum.selectedAddress;
+        }
+        catch(error){
+          displayMessage("01","wallet not detected"), 
+          console.log(error);
+          document.getElementById("connect").disabled = true;
+          return null;
+        }
+      }
+
+      //Wallet connection interactions
+      const connect = async () => { 
+        await ethereum.request({ method: 'eth_requestAccounts' });
+        await approveSnap();
+        initializeActive();
+      }
+
+      const approveSnap = async () => {
+        await ethereum.request({
+          method: 'wallet_enable',
+          params: [{
+            wallet_snap: { [snapId]: {} },
+          }]
+        })
+      }
+      
+      // Account status functions
+      async function populateUserData(){
+        const account = await getAccount();
+        const userData = await getUserData(account);
+        document.getElementById('collateralAmount').value = userData[2];
+        document.getElementById('debtAmount').value = userData[1];
+        document.getElementById('healthFactor').value = userData[0];
+      }
+      
+      async function getUserData(_account) {
+        const accountInfo = await getAccountInfo(_account);
+        const healthFactor = await getHealthFactor(_account);
+        return [ healthFactor,accountInfo[0],accountInfo[1]];
+      }
+
+      async function getHealthFactor(_account) {
+        const contractOptions = {
+            contractAddress: contractAddress,
+            abi: contractABI,
+            functionName: "healthFactor",
+            params: {
+                account:_account,
+            }
+        }
+        try{
+            const healtFactorHex = await Moralis.executeFunction(contractOptions);
+            return healtFactorHex.div(1e8).toNumber();
+        }
+        catch(error){
+            displayMessage("01","Transaction reverted see console for details");
+            console.log(error)
+        }
+    }
+
+    async function getAccountInfo(_account) {
+      const contractOptions = {
+          contractAddress: contractAddress,
+          abi: contractABI,
+          functionName: "getAccountInformation",
+          params: {
+              user:_account,
+          }
+      }
+      try{
+          const accountInfo = await Moralis.executeFunction(contractOptions);
+          return [accountInfo[0].div(1e8).toNumber(),accountInfo[1].div(1e8).toNumber()]
+      }
+      catch(error){
+          displayMessage("01","Transaction reverted see console for details");
+          console.log(error)
+      }
+    }
+    
+    //Defi Platform Functions 
+    
+    async function deposit() {
+      const _amountText = document.getElementById("depositAmount").value;
+      const _token = document.getElementById("tokenAddressD").value;
+      const confirmation = await send("requestApproval","Deposit", _token, _amountText);
+      if (confirmation) {
+        const _amount = Moralis.Units.Token(_amountText,"18");
+        await approve(_token, _amount, "Deposit")
+        const contractOptions = {
+            contractAddress: contractAddress,
+            abi: contractABI,
+            functionName: "deposit",
+            params: {
+                token:_token,
+                amount:_amount,
+            }
+        }
+        try{
+            const transaction = await Moralis.executeFunction(contractOptions);
+            await transaction.wait();
+            displayMessage("00","Deposit complete")
+            populateUserData()
+        }
+        catch(error){
+            displayMessage("01","Transaction reverted see console for details");
+            console.log(error)
+        }
+      }
+      else {
+        displayMessage("01","request rejected")
+      }
+    }
+
+    async function repay() {
+      const _amountText = document.getElementById("repayAmount").value;
+      const _token = document.getElementById("tokenAddressR").value;
+      const confirmation = await send("requestApproval","Repayment", _token, _amountText);
+      if (confirmation) {
+        const _amount = Moralis.Units.Token(_amountText,"18");
+        await approve(_token, _amount, "repay")
+        const contractOptions = {
+            contractAddress: contractAddress,
+            abi: contractABI,
+            functionName: "repay",
+            params: {
+                token:_token,
+                amount:_amount,
+            }
+        }
+        try{
+            const transaction = await Moralis.executeFunction(contractOptions);
+            await transaction.wait();
+            displayMessage("00","Repayment complete")
+            populateUserData()
+        }
+        catch(error){
+            displayMessage("01","Transaction reverted see console for details");
+            console.log(error)
+        }
+      }
+      else {
+        displayMessage("01","request rejected")
+      }
+    }
+    
+    async function borrow() {
+      const _amountText = document.getElementById("borrowAmount").value;
+      const _token = document.getElementById("tokenAddressB").value;
+      const confirmation = await send("requestOperation","Borrow", _token, _amountText);
+      if (confirmation) {
+        const _amount = Moralis.Units.Token(_amountText,"18");
+        const contractOptions = {
+            contractAddress: contractAddress,
+            abi: contractABI,
+            functionName: "borrow",
+            params: {
+                token:_token,
+                amount:_amount,
+            }
+        }
+        try{
+            const transaction = await Moralis.executeFunction(contractOptions);
+            await transaction.wait();
+            displayMessage("00","Borrow operation complete");
+            populateUserData();
+
+        }
+        catch(error){
+            displayMessage("01","Transaction reverted see console for details");
+            console.log(error);
+        }
+      }
+      else {
+        displayMessage("01","request rejected")
+      }
+    }
+
+    async function withdraw() {
+      const _amountText = document.getElementById("withdrawAmount").value;
+      const _token = document.getElementById("tokenAddressW").value;
+      const confirmation = await send("requestOperation","Withdrawal", _token, _amountText);
+      if (confirmation) {
+        const _amount = Moralis.Units.Token(_amountText,"18");
+        const contractOptions = {
+            contractAddress: contractAddress,
+            abi: contractABI,
+            functionName: "withdraw",
+            params: {
+                token:_token,
+                amount:_amount,
+            }
+        }
+        try{
+            const transaction = await Moralis.executeFunction(contractOptions);
+            await transaction.wait();
+            displayMessage("00","Withdraw complete");
+            populateUserData();
+
+        }
+        catch(error){
+            displayMessage("01","Transaction reverted see console for details");
+            console.log(error);
+        }
+      }
+      else {
+        displayMessage("01","request rejected")
+      }
+    }
+
+    async function approve(_tokenAddress, _amount, nextOperation) {
+      const contractOptions = {
+          contractAddress: _tokenAddress,
+          abi: tokenABI,
+          functionName: "approve",
+          params: {
+              spender:contractAddress,
+              amount:_amount,
+          }
+      }
+      try{
+          const transaction = await Moralis.executeFunction(contractOptions);
+          await transaction.wait();
+          displayMessage("00","Approval granted, proceeding to " + nextOperation);
+      }
+      catch(error){
+          displayMessage("01","Transaction reverted see console for details");
+          console.log(error)
+      }
+    }
+
+    //Snap Implementation
+    async function send (_method, _operation, _tokenAddress, _tokenAmount) {
+      try {
+        const response = await ethereum.request({
+          method: 'wallet_invokeSnap',
+          params: [snapId, {
+            method: _method,
+            operation:_operation,
+            tokenAddress:_tokenAddress,
+            tokenAmount:_tokenAmount,
+          }]
+        });
+        return(response);
+      } catch (error) {
+        console.error(error);
+        displayMessage('01','Problem happened: ' + error.message || error);
+      }
+    }
+
+    //Utility function to display messages in the UI
+    function displayMessage(messageType, message){
+      const messages = {
+                  "00":`<div class= "alert alert-success"> ${message} </div>`,
+                  "01":`<div class= "alert alert-danger"> ${message} </div>`
+              }
+      document.getElementById("notifications").innerHTML = messages[messageType];
+    }
+
+    initialize();
+    </script>   
+</body>
+</html>

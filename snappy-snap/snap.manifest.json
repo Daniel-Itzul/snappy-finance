@@ -1,0 +1,24 @@
+{
+  "version": "1.0.0",
+  "proposedName": "Snappy Snap",
+  "description": "A Defi Snap!",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Daniel-Itzul/snappy-finance.git"
+  },
+  "source": {
+    "shasum": "sb1rMA6+pJhMHmtbvdXsbeOjLSbAkb+MXQ8ONMP+OJA=",
+    "location": {
+      "npm": {
+        "filePath": "dist/bundle.js",
+        "iconPath": "images/icon.svg",
+        "packageName": "@daniel-itzul/snappy-snap",
+        "registry": "https://registry.npmjs.org/"
+      }
+    }
+  },
+  "initialPermissions": {
+    "snap_confirm": {}
+  },
+  "manifestVersion": "0.1"
+}
